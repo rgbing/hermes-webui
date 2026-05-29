@@ -83,7 +83,12 @@ Push-Location `$RepoDir
 
 # Run server
 try {
-    python server.py
+    $PythonPath = Join-Path $HermesDir "venv\Scripts\python.exe"
+    if (-not (Test-Path $PythonPath)) {
+        Write-Host "Error: Python not found at $PythonPath" -ForegroundColor Red
+        exit 1
+    }
+    & $PythonPath server.py
 } catch {
     Write-Host "Error: `$_" -ForegroundColor Red
 } finally {
@@ -110,7 +115,7 @@ if ($ExistingService) {
             Start-Sleep -Seconds 2
         }
         Write-Host "Removing existing service..." -ForegroundColor Yellow
-        Remove-Service -Name $ServiceName -Force
+        sc.exe delete $ServiceName | Out-Null
         Start-Sleep -Seconds 1
         Write-Host "Existing service removed." -ForegroundColor Green
     } else {
@@ -155,7 +160,7 @@ try {
     Stop-Service -Name $ServiceName -ErrorAction SilentlyContinue
 
     # Remove service if exists
-    Remove-Service -Name $ServiceName -ErrorAction SilentlyContinue
+    sc.exe delete $ServiceName | Out-Null
 
     # Create service
     $Arguments = @(
